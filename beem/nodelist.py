@@ -31,13 +31,15 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase-limited",
                 "owner": "steemit",
-                "score": 100
+                "hive": False,
+                "score": 50
             },
             {
                 "url": "https://steemd-appbase.steemit.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "steemit",
+                "hive": False,
                 "score": -10
             },
             {
@@ -45,6 +47,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "steemit",
+                "hive": False,
                 "score": -10
             },
             {
@@ -52,6 +55,7 @@ class NodeList(list):
                 "version": "0.19.11",
                 "type": "appbase",
                 "owner": "timcliff",
+                "hive": False,
                 "score": -10
             },
             {
@@ -59,55 +63,61 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "timcliff",
-                "score": 10
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "https://api.steem.house",
                 "version": "0.20.2",
-                "type": "appbase",
+                "type": "hive",
                 "owner": "gtg",
-                "score": 90
+                "hive": False,
+                "score": 10
             },
             {
                 "url": "https://api.steemitdev.com",
                 "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
-                "score": 100
+                "hive": False,
+                "score": 10
             },
             {
                 "url": "https://api.steemitstage.com",
                 "version": "0.19.11",
                 "type": "appbase-dev",
                 "owner": "steemit",
-                "score": 110
+                "hive": False,
+                "score": 10
             },
             {
                 "url": "wss://rpc.steemviz.com",
                 "version": "0.19.12",
-                "type": "appbase",
+                "type": "hive",
                 "owner": "ausbitbank",
-                "score": 10
+                "score": -10
             },
             {
                 "url": "https://rpc.steemviz.com",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "ausbitbank",
-                "score": 100
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "wss://steemd.privex.io",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "privex",
-                "score": 50
+                "score": -10
             },
             {
                 "url": "https://steemd.privex.io",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "privex",
+                "hive": False,
                 "score": 50
             },
             {
@@ -122,6 +132,7 @@ class NodeList(list):
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "themarkymark",
+                "hive": False,
                 "score": -20
             },
             {
@@ -129,20 +140,23 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "gtg",
-                "score": 75
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "https://gtg.steem.house:8090",
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "gtg",
-                "score": 80
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "wss://steemd.pevo.science",
                 "version": "0.19.2",
                 "type": "normal",
                 "owner": "pharesim",
+                "hive": False,
                 "score": -10
             },
             {
@@ -150,6 +164,7 @@ class NodeList(list):
                 "version": "0.19.6",
                 "type": "normal",
                 "owner": "pharesim",
+                "hive": False,
                 "score": -10
             },
             {
@@ -164,13 +179,15 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "netuoso",
-                "score": 20
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "wss://seed.bitcoiner.me",
                 "version": "0.19.6",
                 "type": "normal",
                 "owner": "bitcoiner",
+                "hive": False,
                 "score": -10
             },
             {
@@ -178,6 +195,7 @@ class NodeList(list):
                 "version": "0.19.6",
                 "type": "normal",
                 "owner": "bitcoiner",
+                "hive": False,
                 "score": -10
             },
             {
@@ -185,6 +203,7 @@ class NodeList(list):
                 "version": "0.19.6",
                 "type": "normal",
                 "owner": "steemgigs",
+                "hive": False,
                 "score": -10
             },
             {
@@ -192,6 +211,7 @@ class NodeList(list):
                 "version": "0.19.6",
                 "type": "normal",
                 "owner": "steemgigs",
+                "hive": False,
                 "score": -10
             },
             {
@@ -199,6 +219,7 @@ class NodeList(list):
                 "version": "0.19.11",
                 "type": "appbase",
                 "owner": "followbtcnews",
+                "hive": False,
                 "score": -10
             },
             {
@@ -206,34 +227,47 @@ class NodeList(list):
                 "version": "0.19.12",
                 "type": "appbase",
                 "owner": "followbtcnews",
-                "score": 10
+                "hive": False,
+                "score": 100
             },
             {
                 "url": "wss://anyx.io",
                 "version": "0.20.6",
                 "type": "appbase",
                 "owner": "anyx",
+                "hive": False,
                 "score": -10
             },
             {
                 "url": "https://anyx.io",
-                "version": "0.20.6",
+                "version": "0.23.0",
                 "type": "appbase",
                 "owner": "anyx",
-                "score": 50
+                "hive": True,
+                "score": 80
             },
+            {
+                "url": "http://anyx.io",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "anyx",
+                "hive": True,
+                "score": 50
+            },            
             {
                 "url": "https://rpc.curiesteem.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "curie",
-                "score": 50
+                "hive": False,
+                "score": -10
             },
             {
                 "url": "wss://rpc.curiesteem.com",
                 "version": "0.20.2",
                 "type": "appbase",
                 "owner": "curie",
+                "hive": False,
                 "score": -10
             },
             {
@@ -241,13 +275,15 @@ class NodeList(list):
                 "version": "0.20.8",
                 "type": "appbase",
                 "owner": "themarkymark",
-                "score": 50
+                "hive": False,
+                "score": 90
             },            
             {
                 "url": "wss://testnet.steem.vc",
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
+                "hive": False,
                 "score": 20
             },
             {
@@ -255,6 +291,7 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
+                "hive": False,
                 "score": 5
             },
             {
@@ -262,6 +299,7 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
+                "hive": False,
                 "score": 10
             },
             {
@@ -269,6 +307,7 @@ class NodeList(list):
                 "version": "0.19.2",
                 "type": "testnet",
                 "owner": "almost-digital",
+                "hive": False,
                 "score": 5
             },
             {
@@ -276,7 +315,24 @@ class NodeList(list):
                 "version": "0.21.0",
                 "type": "testnet-dev",
                 "owner": "steemit",
+                "hive": False,
                 "score": 5
+            },
+            {
+                "url": "https://api.hivekings.com",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "drakos",
+                "hive": True,
+                "score": 50
+            },
+            {
+                "url": "https://api.hive.blog",
+                "version": "0.23.0",
+                "type": "appbase",
+                "owner": "hive",
+                "hive": True,
+                "score": 20
             }]
         super(NodeList, self).__init__(nodes)
 
@@ -368,9 +424,10 @@ class NodeList(list):
             new_nodes.append(new_node)
         super(NodeList, self).__init__(new_nodes)
 
-    def get_nodes(self, exclude_limited=True, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
+    def get_nodes(self, hive=False, exclude_limited=False, dev=False, testnet=False, testnetdev=False, wss=True, https=True, not_working=False, normal=True, appbase=True):
         """ Returns nodes as list
 
+            :param bool hive: When True, only HIVE nodes will be returned
             :param bool exclude_limited: When True, limited nodes are excluded
             :param bool dev: when True, dev nodes with version 0.19.11 are included
             :param bool testnet: when True, testnet nodes are included
@@ -396,6 +453,8 @@ class NodeList(list):
             node_type_list.append("appbase-limited")
         for node in self:
             if node["type"] in node_type_list and (node["score"] >= 0 or not_working):
+                if hive != node["hive"]:
+                    continue
                 if not https and node["url"][:5] == 'https':
                     continue
                 if not wss and node["url"][:3] == 'wss':

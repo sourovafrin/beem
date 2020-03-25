@@ -214,7 +214,7 @@ class GrapheneRPC(object):
                     self.session = shared_session_instance()
                     self.current_rpc = self.rpc_methods["jsonrpc"]
                     self.headers = {'User-Agent': 'beem v%s' % (beem_version),
-                                    'content-type': 'application/json'}
+                                    'content-type': 'application/json; charset=utf-8'}
             try:
                 if self.ws:
                     self.ws.connect(self.url)
@@ -282,7 +282,7 @@ class GrapheneRPC(object):
                                          timeout=self.timeout)
         if response.status_code == 401:
             raise UnauthorizedError
-        return response.text
+        return response
 
     def ws_send(self, payload):
         if self.ws is None:
@@ -303,14 +303,18 @@ class GrapheneRPC(object):
             props = self.get_config(api="database")
         chain_id = None
         network_version = None
+        is_hive = False
         for key in props:
             if key[-8:] == "CHAIN_ID":
                 chain_id = props[key]
+                is_hive = key[:4] == "HIVE"
             elif key[-18:] == "BLOCKCHAIN_VERSION":
                 network_version = props[key]
 
         if chain_id is None:
             raise("Connecting to unknown network!")
+        if is_hive:
+            return self.known_chains["HIVE"]
         highest_version_chain = None
         for k, v in list(self.known_chains.items()):
             if v["chain_id"] == chain_id and self.version_string_to_int(v["min_version"]) <= self.version_string_to_int(network_version):
@@ -372,6 +376,7 @@ class GrapheneRPC(object):
         if self.url is None:
             raise RPCConnection("RPC is not connected!")
         reply = {}
+        response = None
         while True:
             self.nodes.increase_error_cnt_call()
             try:
@@ -379,7 +384,8 @@ class GrapheneRPC(object):
                    self.current_rpc == self.rpc_methods['wsappbase']:
                     reply = self.ws_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
                 else:
-                    reply = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
+                    response = self.request_send(json.dumps(payload, ensure_ascii=False).encode('utf8'))
+                    reply = response.text
                 if not bool(reply):
                     try:
                         self.nodes.sleep_and_check_retries("Empty Reply", call_retry=True)
@@ -414,7 +420,10 @@ class GrapheneRPC(object):
 
         ret = {}
         try:
-            ret = json.loads(reply, strict=False)
+            if response is None:
+                ret = json.loads(reply, strict=False, encoding="utf-8")
+            else:
+                ret = response.json()
         except ValueError:
             self._check_for_server_error(reply)
 
@@ -459,6 +468,8 @@ class GrapheneRPC(object):
             api_name = get_api_name(self.is_appbase_ready(), *args, **kwargs)
             if self.is_appbase_ready() and self.use_condenser:
                 api_name = "condenser_api"
+            if (api_name is None):
+                api_name = 'database_api'
 
             # let's be able to define the num_retries per query
             stored_num_retries_call = self.nodes.num_retries_call

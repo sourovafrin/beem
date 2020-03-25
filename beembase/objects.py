@@ -48,7 +48,11 @@ class Amount(object):
             if self.precision is None:
                 raise Exception("Asset unknown")
             self.amount = round(float(self.amount) * 10 ** self.precision)
-
+            # Workaround to allow transfers in HIVE
+            if self.symbol == "HBD":
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE":
+                self.symbol = "STEEM"
             self.str_repr = '{:.{}f} {}'.format((float(self.amount) / 10 ** self.precision), self.precision, self.symbol)
         elif isinstance(d, list):
             self.amount = d[0]
@@ -82,6 +86,11 @@ class Amount(object):
         else:
             self.amount = d.amount
             self.symbol = d.symbol
+            # Workaround to allow transfers in HIVE
+            if self.symbol == "HBD":
+                self.symbol = "SBD"
+            elif self.symbol == "HIVE":
+                self.symbol = "STEEM"              
             self.asset = d.asset["asset"]
             self.precision = d.asset["precision"]
             self.amount = round(float(self.amount) * 10 ** self.precision)
@@ -91,6 +100,11 @@ class Amount(object):
 
     def __bytes__(self):
         # padding
+        # Workaround to allow transfers in HIVE
+        if self.symbol == "HBD":
+            self.symbol = "SBD"
+        elif self.symbol == "HIVE":
+            self.symbol = "STEEM"        
         symbol = self.symbol + "\x00" * (7 - len(self.symbol))
         return (struct.pack("<q", int(self.amount)) + struct.pack("<b", self.precision) +
                 py23_bytes(symbol, "ascii"))
@@ -314,3 +328,100 @@ class CommentOptionExtensions(Static_variant):
         else:
             raise Exception("Unknown CommentOptionExtension")
         super(CommentOptionExtensions, self).__init__(data, type_id)
+
+        
+class SocialActionCommentCreate(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+            meta = ""
+            if "json_metadata" in kwargs and kwargs["json_metadata"]:
+                if (isinstance(kwargs["json_metadata"], dict)
+                        or isinstance(kwargs["json_metadata"], list)):
+                    meta = json.dumps(kwargs["json_metadata"])
+                else:
+                    meta = kwargs["json_metadata"]
+
+            pod = String(kwargs["pod"]) if "pod" in kwargs else None
+            max_accepted_payout = Amount(kwargs["max_accepted_payout"]) if "max_accepted_payout" in kwargs else None
+            allow_replies = Bool(kwargs["allow_replies"]) if "allow_replies" in kwargs else None
+            allow_votes = Bool(kwargs["allow_votes"]) if "allow_votes" in kwargs else None
+            allow_curation_rewards = Bool(kwargs["allow_curation_rewards"]) if "allow_curation_rewards" in kwargs else None
+            allow_friends = Bool(kwargs["allow_friends"]) if "allow_friends" in kwargs else None
+
+            super(SocialActionCommentCreate, self).__init__(
+                OrderedDict([
+                    ('permlink', String(kwargs["permlink"])),
+                    ('parent_author', String(kwargs["parent_author"])),
+                    ('parent_permlink', String(kwargs["parent_permlink"])),
+                    ('pod', Optional(pod)),
+                    ('max_accepted_payout', Optional(max_accepted_payout)),
+                    ('allow_replies', Optional(allow_replies)),
+                    ('allow_votes', Optional(allow_votes)),
+                    ('allow_curation_rewards', Optional(allow_curation_rewards)),
+                    ('allow_friends', Optional(allow_friends)),
+                    ('title', String(kwargs["title"])),
+                    ('body', String(kwargs["body"])),
+                    ('json_metadata', String(meta)),
+                ]))
+
+class SocialActionCommentUpdate(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+            meta = Optional(None)
+            if "json_metadata" in kwargs and kwargs["json_metadata"]:
+                if (isinstance(kwargs["json_metadata"], dict)
+                        or isinstance(kwargs["json_metadata"], list)):
+                    meta = json.dumps(kwargs["json_metadata"])
+                else:
+                    if "json_metadata" in kwargs:
+                        meta = kwargs["json_metadata"]
+
+            title = kwargs["title"] if "title" in kwargs else None
+            body = kwargs["body"] if "body" in kwargs else None
+
+            super(SocialActionCommentUpdate, self).__init__(
+                OrderedDict([
+                    ('permlink', String(kwargs["permlink"])),
+                    ('title', Optional(String(kwargs["title"]))),
+                    ('body', Optional(String(kwargs["body"]))),
+                    ('json_metadata', meta),
+                ]))
+
+class SocialActionCommentDelete(GrapheneObject):
+    def __init__(self, *args, **kwargs):
+        if isArgsThisClass(self, args):
+            self.data = args[0].data
+        else:
+            if len(args) == 1 and len(kwargs) == 0:
+                kwargs = args[0]
+
+            super(SocialActionCommentDelete, self).__init__(
+                OrderedDict([
+                    ('permlink', String(kwargs["permlink"]))
+                ]))
+
+class SocialActionVariant(Static_variant):
+    def __init__(self, o):
+        type_id, data = o
+        if type_id == 0:
+            data = SocialActionCommentCreate(data)
+        else:
+            if type_id == 1:
+                data = SocialActionCommentUpdate(data)
+            else:
+                if type_id == 2:
+                    data = SocialActionCommentDelete(data)
+                else:
+                    raise Exception("Unknown SocialAction")
+        Static_variant.__init__(self, data, type_id)
+

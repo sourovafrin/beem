@@ -4,6 +4,16 @@ from __future__ import print_function
 from __future__ import unicode_literals
 default_prefix = "STM"
 known_chains = {
+    "HIVE": {
+        "chain_id": "0" * int(256 / 4),
+        "min_version": '0.23.0',
+        "prefix": "STM",
+        "chain_assets": [
+            {"asset": "@@000000013", "symbol": "HBD", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "HIVE", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
     "STEEMAPPBASE": {
         "chain_id": "0" * int(256 / 4),
         "min_version": '0.19.10',
@@ -102,6 +112,16 @@ known_chains = {
             {"asset": "SBD", "symbol": "EUR", "precision": 3, "id": 0},
             {"asset": "STEEM", "symbol": "EFTG", "precision": 3, "id": 1},
             {"asset": "VESTS", "symbol": "VESTS", "precision": 6, "id": 2}
+        ],
+    },
+    "PULSAR": {
+        "chain_id": "07c687c01f134adaf217a9b9367d1cef679c3c020167fdd25ee8c403f687528e",
+        "min_version": "0.101.0",
+        "prefix": "EUR",
+        "chain_assets": [
+            {"asset": "@@000000013", "symbol": "EUR", "precision": 3, "id": 0},
+            {"asset": "@@000000021", "symbol": "PULSE", "precision": 3, "id": 1},
+            {"asset": "@@000000037", "symbol": "VESTS", "precision": 6, "id": 2}
         ],
     },
     "WLS": {

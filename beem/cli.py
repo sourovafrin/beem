@@ -86,8 +86,8 @@ def prompt_callback(ctx, param, value):
 
 
 def asset_callback(ctx, param, value):
-    if value not in ["STEEM", "SBD"]:
-        print("Please STEEM or SBD as asset!")
+    if value not in ["STEEM", "SBD", "HIVE", "HBD"]:
+        print("Please STEEM/HIVE or SBD/HBD as asset!")
         ctx.abort()
     else:
         return value
@@ -293,6 +293,7 @@ def nextnode(results):
         t.add_row(["Node-Url", node[0]])
     if not offline:
         t.add_row(["Version", stm.get_blockchain_version()])
+        t.add_row(["HIVE", stm.is_hive])
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
@@ -397,6 +398,7 @@ def currentnode(version, url):
         t.add_row(["Node-Url", node[0]])
     if not offline:
         t.add_row(["Version", stm.get_blockchain_version()])
+        t.add_row(["HIVE", stm.is_hive])
     else:
         t.add_row(["Version", "steempy is in offline mode..."])
     print(t)
@@ -406,6 +408,9 @@ def currentnode(version, url):
 @click.option(
     '--show', '-s', is_flag=True, default=False,
     help="Prints the updated nodes")
+@click.option(
+    '--hive', '-h', is_flag=True, default=False,
+    help="Use only HIVE nodes, when set to true.")
 @click.option(
     '--test', '-t', is_flag=True, default=False,
     help="Do change the node list, only print the newest nodes setup.")
@@ -421,7 +426,7 @@ def currentnode(version, url):
 @click.option(
     '--only-non-appbase', '-n', is_flag=True, default=False,
     help="Use only non-appbase nodes")
-def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase):
+def updatenodes(show, hive, test, only_https, only_wss, only_appbase, only_non_appbase):
     """ Update the nodelist from @fullnodeupdate
     """
     stm = shared_steem_instance()
@@ -431,7 +436,7 @@ def updatenodes(show, test, only_https, only_wss, only_appbase, only_non_appbase
     t.align = "l"
     nodelist = NodeList()
     nodelist.update_nodes(steem_instance=stm)
-    nodes = nodelist.get_nodes(normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
+    nodes = nodelist.get_nodes(hive=hive, exclude_limited=False, normal=not only_appbase, appbase=not only_non_appbase, wss=not only_https, https=not only_wss)
     if show or test:
         sorted_nodes = sorted(nodelist, key=lambda node: node["score"], reverse=True)
         for node in sorted_nodes:
@@ -720,10 +725,9 @@ def listaccounts():
 
 @cli.command()
 @click.argument('post', nargs=1)
-@click.argument('vote_weight', nargs=1, required=False)
 @click.option('--weight', '-w', help='Vote weight (from 0.1 to 100.0)')
 @click.option('--account', '-a', help='Voter account name')
-def upvote(post, vote_weight, account, weight):
+def upvote(post, account, weight):
     """Upvote a post/comment
 
         POST is @author/permlink
@@ -731,18 +735,15 @@ def upvote(post, vote_weight, account, weight):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not weight and vote_weight:
-        weight = vote_weight
-        if not weight.replace('.', '', 1).isdigit():
-            raise ValueError("vote_weight must be a float!")
-        else:
-            weight = float(weight)
-            if weight > 100:
-                raise ValueError("Maximum vote weight is 100.0!")
-            elif weight < -100:
-                raise ValueError("Minimum vote weight is -100.0!")
-    elif not weight and not vote_weight:
-        weight = stm.config["default_vote_weight"]
+    if not weight:
+        weight = stm.config["default_vote_weight"]        
+    else:
+        weight = float(weight)
+        if weight > 100:
+            raise ValueError("Maximum vote weight is 100.0!")
+        elif weight < 0:
+            raise ValueError("Minimum vote weight is 0!")
+
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -758,13 +759,39 @@ def upvote(post, vote_weight, account, weight):
     tx = json.dumps(tx, indent=4)
     print(tx)
 
+@cli.command()
+@click.argument('post', nargs=1)
+@click.option('--account', '-a', help='Voter account name')
+def delete(post, account):
+    """delete a post/comment
+
+        POST is @author/permlink
+    """
+    stm = shared_steem_instance()
+    if stm.rpc is not None:
+        stm.rpc.rpcconnect()
+
+    if not account:
+        account = stm.config["default_account"]
+    if not unlock_wallet(stm):
+        return
+    try:
+        post = Comment(post, steem_instance=stm)
+        tx = post.delete(account=account)
+        if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
+            tx = stm.steemconnect.url_from_tx(tx)
+    except exceptions.VotingInvalidOnArchivedPost:
+        print("Could not delete post.")
+        tx = {}
+    tx = json.dumps(tx, indent=4)
+    print(tx)
+
 
 @cli.command()
 @click.argument('post', nargs=1)
-@click.argument('vote_weight', nargs=1, required=False)
 @click.option('--account', '-a', help='Voter account name')
-@click.option('--weight', '-w', default=100.0, help='Vote weight (from 0.1 to 100.0)')
-def downvote(post, vote_weight, account, weight):
+@click.option('--weight', '-w', default=100, help='Downvote weight (from 0.1 to 100.0)')
+def downvote(post, account, weight):
     """Downvote a post/comment
 
         POST is @author/permlink
@@ -772,18 +799,13 @@ def downvote(post, vote_weight, account, weight):
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
-    if not weight and vote_weight:
-        weight = vote_weight
-        if not weight.replace('.', '', 1).isdigit():
-            raise ValueError("vote_weight must be a float!")
-        else:
-            weight = float(weight)
-            if weight > 100:
-                raise ValueError("Maximum vote weight is 100.0!")
-            elif weight < -100:
-                raise ValueError("Minimum vote weight is -100.0!")
-    elif not weight and not vote_weight:
-        weight = stm.config["default_vote_weight"]
+
+    weight = float(weight)
+    if weight > 100:
+        raise ValueError("Maximum downvote weight is 100.0!")
+    elif weight < 0:
+        raise ValueError("Minimum downvote weight is 0!")
+    
     if not account:
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
@@ -807,7 +829,7 @@ def downvote(post, vote_weight, account, weight):
 @click.argument('memo', nargs=1, required=False)
 @click.option('--account', '-a', help='Transfer from this account')
 def transfer(to, amount, asset, memo, account):
-    """Transfer SBD/STEEM"""
+    """Transfer SBD/HD STEEM/HIVE"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -830,7 +852,7 @@ def transfer(to, amount, asset, memo, account):
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--to', help='Powerup this account', default=None)
 def powerup(amount, account, to):
-    """Power up (vest STEEM as STEEM POWER)"""
+    """Power up (vest STEEM/HIVE as STEEM/HIVE POWER)"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -913,7 +935,7 @@ def delegate(amount, to_account, account):
 @click.option('--percentage', default=100, help='The percent of the withdraw to go to the "to" account')
 @click.option('--account', '-a', help='Powerup from this account')
 @click.option('--auto_vest', help='Set to true if the from account should receive the VESTS as'
-              'VESTS, or false if it should receive them as STEEM.', is_flag=True)
+              'VESTS, or false if it should receive them as STEEM/HIVE.', is_flag=True)
 def powerdownroute(to, percentage, account, auto_vest):
     """Setup a powerdown route"""
     stm = shared_steem_instance()
@@ -935,7 +957,7 @@ def powerdownroute(to, percentage, account, auto_vest):
 @click.argument('amount', nargs=1)
 @click.option('--account', '-a', help='Powerup from this account')
 def convert(amount, account):
-    """Convert STEEMDollars to Steem (takes a week to settle)"""
+    """Convert SBD/HBD to Steem/Hive (takes a week to settle)"""
     stm = shared_steem_instance()
     if stm.rpc is not None:
         stm.rpc.rpcconnect()
@@ -1520,7 +1542,6 @@ def uploadimage(image, account, image_name):
         stm.rpc.rpcconnect()
     if not account:
         account = stm.config["default_account"]
-    author = account
     if not unlock_wallet(stm):
         return
     iu = ImageUploader(steem_instance=stm)
@@ -1641,10 +1662,10 @@ def reply(authorperm, body, account, title):
         account = stm.config["default_account"]
     if not unlock_wallet(stm):
         return
-    c = Comment(authorperm, steem_instance=stm)
+    
     if title is None:
         title = ""
-    tx = c.reply(body, title=title, author=account)
+    tx = stm.post(title, body, json_metadata=None, author=account, reply_identifier=authorperm)
     if stm.unsigned and stm.nobroadcast and stm.steemconnect is not None:
         tx = stm.steemconnect.url_from_tx(tx)
     tx = json.dumps(tx, indent=4)
@@ -1758,7 +1779,7 @@ def ticker(sbd_to_steem):
     ticker = market.ticker()
     for key in ticker:
         if key in ["highest_bid", "latest", "lowest_ask"] and sbd_to_steem:
-            t.add_row([key, str(ticker[key].as_base("SBD"))])
+            t.add_row([key, str(ticker[key].as_base(stm.sbd_symbol))])
         elif key in "percent_change" and sbd_to_steem:
             t.add_row([key, "%.2f %%" % -ticker[key]])
         elif key in "percent_change":
@@ -1792,7 +1813,7 @@ def pricehistory(width, height, ascii):
     else:
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=4, placeholder='{:6.2f} $', charset=charset)
-    print("\n            Price history for STEEM (median price %4.2f $)\n" % (float(current_base) / float(current_quote)))
+    print("\n            Price history for %s (median price %4.2f $)\n" % (stm.steem_symbol, float(current_base) / float(current_quote)))
 
     chart.adapt_on_series(price)
     chart.new_chart()
@@ -1840,9 +1861,11 @@ def tradehistory(days, hours, sbd_to_steem, limit, width, height, ascii):
         charset = u'utf8'
     chart = AsciiChart(height=height, width=width, offset=3, placeholder='{:6.2f} ', charset=charset)
     if sbd_to_steem:
-        print("\n     Trade history %s - %s \n\nSBD/STEEM" % (formatTimeString(start), formatTimeString(stop)))
+        print("\n     Trade history %s - %s \n\n%s/%s" % (formatTimeString(start), formatTimeString(stop),
+                                                          stm.sbd_symbol, stm.steem_symbol))
     else:
-        print("\n     Trade history %s - %s \n\nSTEEM/SBD" % (formatTimeString(start), formatTimeString(stop)))
+        print("\n     Trade history %s - %s \n\n%s/%s" % (formatTimeString(start), formatTimeString(stop),
+                                                          stm.steem_symbol, stm.sbd_symbol))
     chart.adapt_on_series(price)
     chart.new_chart()
     chart.add_axis()
@@ -1865,7 +1888,7 @@ def orderbook(chart, limit, show_date, width, height, ascii):
     market = Market(steem_instance=stm)
     orderbook = market.orderbook(limit=limit, raw_data=False)
     if not show_date:
-        header = ["Asks Sum SBD", "Sell Orders", "Bids Sum SBD", "Buy Orders"]
+        header = ["Asks Sum " + stm.sbd_symbol, "Sell Orders", "Bids Sum " + stm.sbd_symbol, "Buy Orders"]
     else:
         header = ["Asks date", "Sell Orders", "Bids date", "Buy Orders"]
     t = PrettyTable(header, hrules=0)
@@ -1881,13 +1904,13 @@ def orderbook(chart, limit, show_date, width, height, ascii):
     n = 0
     for order in orderbook["asks"]:
         asks.append(order)
-        sum_asks += float(order.as_base("SBD")["base"])
+        sum_asks += float(order.as_base(stm.sbd_symbol)["base"])
         sumsum_asks.append(sum_asks)
     if n < len(asks):
         n = len(asks)
     for order in orderbook["bids"]:
         bids.append(order)
-        sum_bids += float(order.as_base("SBD")["base"])
+        sum_bids += float(order.as_base(stm.sbd_symbol)["base"])
         sumsum_bids.append(sum_bids)
     if n < len(bids):
         n = len(bids)
@@ -1953,9 +1976,9 @@ def orderbook(chart, limit, show_date, width, height, ascii):
 @click.option('--account', '-a', help='Buy with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def buy(amount, asset, price, account, orderid):
-    """Buy STEEM or SBD from the internal market
+    """Buy STEEM/HIVE or SBD/HBD from the internal market
 
-        Limit buy price denoted in (SBD per STEEM)
+        Limit buy price denoted in (SBD per STEEM or HBD per HIVE)
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -1998,9 +2021,9 @@ def buy(amount, asset, price, account, orderid):
 @click.option('--account', '-a', help='Sell with this account (defaults to "default_account")')
 @click.option('--orderid', help='Set an orderid')
 def sell(amount, asset, price, account, orderid):
-    """Sell STEEM or SBD from the internal market
+    """Sell STEEM/HIVE or SBD/HBD from the internal market
 
-        Limit sell price denoted in (SBD per STEEM)
+        Limit sell price denoted in (SBD per STEEM) or (HBD per HIVE)
     """
     stm = shared_steem_instance()
     if stm.rpc is not None:
@@ -2331,24 +2354,35 @@ def witnessfeed(witness, wif, base, quote, support_peg):
     old_quote = witness["sbd_exchange_rate"]["quote"]
     last_published_price = Price(witness["sbd_exchange_rate"], steem_instance=stm)
     steem_usd = None
+    hive_usd = None
     print("Old price %.3f (base: %s, quote %s)" % (float(last_published_price), old_base, old_quote))
     if quote is None and not support_peg:
         quote = Amount("1.000 %s" % stm.steem_symbol, steem_instance=stm)
-    elif quote is None:
+    elif quote is None and not stm.is_hive:
         latest_price = market.ticker()['latest']
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
         sbd_usd = float(latest_price.as_base(stm.sbd_symbol)) * steem_usd
         quote = Amount(1. / sbd_usd, stm.steem_symbol, steem_instance=stm)
+    elif quote is None and stm.is_hive:
+        latest_price = market.ticker()['latest']
+        if hive_usd is None:
+            hive_usd = market.hive_usd_implied()
+        hbd_usd = float(latest_price.as_base(stm.sbd_symbol)) * hive_usd
+        quote = Amount(1. / hbd_usd, stm.steem_symbol, steem_instance=stm)        
     else:
         if str(quote[-5:]).upper() == stm.steem_symbol:
             quote = Amount(quote, steem_instance=stm)
         else:
             quote = Amount(quote, stm.steem_symbol, steem_instance=stm)
-    if base is None:
+    if base is None and not stm.is_hive:
         if steem_usd is None:
             steem_usd = market.steem_usd_implied()
         base = Amount(steem_usd, stm.sbd_symbol, steem_instance=stm)
+    elif base is None and stm.is_hive:
+        if hive_usd is None:
+            hive_usd = market.hive_usd_implied()
+        base = Amount(hive_usd, stm.sbd_symbol, steem_instance=stm)        
     else:
         if str(quote[-3:]).upper() == stm.sbd_symbol:
             base = Amount(base, steem_instance=stm)
@@ -2381,6 +2415,8 @@ def witness(witness):
     config = stm.get_config()
     if "VIRTUAL_SCHEDULE_LAP_LENGTH2" in config:
         lap_length = int(config["VIRTUAL_SCHEDULE_LAP_LENGTH2"])
+    elif "HIVE_VIRTUAL_SCHEDULE_LAP_LENGTH2" in config:
+        lap_length = int(config["HIVE_VIRTUAL_SCHEDULE_LAP_LENGTH2"])
     else:
         lap_length = int(config["STEEM_VIRTUAL_SCHEDULE_LAP_LENGTH2"])
     rank = 0
@@ -2523,7 +2559,7 @@ def curation(authorperm, account, limit, min_vote, max_vote, min_performance, ma
         stm.rpc.rpcconnect()
     if authorperm is None:
         authorperm = 'all'
-    if account is None and authorperm is not 'all':
+    if account is None and authorperm != 'all':
         show_all_voter = True
     else:
         show_all_voter = False

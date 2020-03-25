@@ -1,5 +1,78 @@
 Changelog
 =========
+0.22.8
+------
+* Allow to use HIVE/HBD also in operations
+
+0.22.7
+------
+* Fix HIVE/HBD symbols in operations
+
+0.22.6
+------
+* Add hive_btc_ticker and hive_usd_ticker
+* use coingecko API
+* add HIVE/HBD to all marker operation in beempy
+
+0.22.5
+------
+* Add workaround to allow transfers of HIVE/HBD in HIVE (operation need to use STEEM/SBD internally)
+
+0.22.4
+------
+* fix AttributeError: 'PointJacobi' object has no attribute '_Point__x'
+
+0.22.3
+------
+* Add two new hive api nodes
+
+0.22.1
+------
+* Fix get_nodes defaults
+
+0.22.0
+------
+* Add HIVE chain
+* improve hive chain detection
+* add hive option to nodes in Nodelist
+* new is_hive property of steem object
+
+0.21.1
+------
+* Fix non ascii text handling on some nodes
+* Add STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF21 constant
+* Fix get_curation_rewards
+
+0.21.0
+------
+* First release for HF21
+* get_downvoting_power added to account
+* get_downvote_manabar added to account
+* add options use_tags_api to use database api to get comments
+* fix get_similar_account_names
+* add more try expect to fail back to condenser api
+* operations for account_update2, create_proposal, update_proposal_votes and remove_proposal were added
+* update_proposal_votes was added to steem
+* update_account_jsonmetadata was added to account
+* new beempy delete were added
+
+0.20.23
+-------
+* Switch to next node, when current node has the necesary api not enabled
+* handle Client returned invalid format. Expected JSON! and switch to next node
+* More checks added
+* get_estimated_block_num is faster and uses BlockHeader
+* exclude_limited=False is default now for get_nodes
+
+0.20.22
+-------
+* Fix #195 - comment.downvote(100) will now downvote with 100%, negative numbers are not allowed anymore
+* comment.upvote(), negative numbers are not allowed anymore
+* Fix #193 - steem.vote() was added, so that voting is possible without tags_api
+* PR #181 - improve permlink derivation by crokkon
+* PR #192 - fixes compatibility issues with WhaleShares HF2 / v2.5 by alexpmorris
+* Fix bug for get_estimated_block_num when a block is skipped
+
 0.20.21
 -------
 * Fix float entered in Amount will be reduced by 0.001 due to rounding issues

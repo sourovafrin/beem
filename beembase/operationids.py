@@ -47,6 +47,10 @@ ops = [
     'delegate_vesting_shares',
     'account_create_with_delegation',
     'witness_set_properties',
+    'account_update2',
+    'create_proposal',
+    'update_proposal_votes',
+    'remove_proposal',    
     'fill_convert_request',
     'author_reward',
     'curation_reward',
@@ -62,6 +66,12 @@ ops = [
     'comment_payout_update',
     'return_vesting_delegation',
     'comment_benefactor_reward',
+    'return_vesting_delegation',
+    'comment_benefactor_reward',
+    'producer_reward',
+    'clear_null_account_balance',
+    'proposal_pay',
+    'sps_fund'
 ]
 operations = {o: ops.index(o) for o in ops}
 
@@ -73,8 +83,8 @@ ops_wls = [
     'withdraw_vesting',
     'account_create',
     'account_update',
-    'account_forsale',
-    'account_buying',
+    'account_action',
+    'social_action',
     'witness_update',
     'account_witness_vote',
     'account_witness_proxy',
@@ -85,6 +95,8 @@ ops_wls = [
     'set_withdraw_vesting_route',
     'custom_binary',
     'claim_reward_balance',
+    'friend_action',
+    'pod_action',
     'author_reward',
     'curation_reward',
     'comment_reward',
@@ -92,6 +104,8 @@ ops_wls = [
     'hardfork',
     'comment_payout_update',
     'comment_benefactor_reward',
+    'devfund',
+    'pod_virtual'
 ]
 operations_wls = {o: ops_wls.index(o) for o in ops_wls}
 

@@ -117,8 +117,6 @@ class Amount(dict):
             self["symbol"] = self["asset"]["symbol"]
             self["amount"] = Decimal(amount["amount"]) / Decimal(10 ** self["asset"]["precision"])
 
-
-
         elif isinstance(amount, (float)) and asset and isinstance(asset, Asset):
             self["amount"] = str(amount)
             self["asset"] = asset
@@ -213,9 +211,10 @@ class Amount(dict):
 
     def __str__(self):
         amount = quantize(self["amount"], self["asset"]["precision"])
+        symbol = self["symbol"]
         return "{:.{prec}f} {}".format(
             amount,
-            self["symbol"],
+            symbol,
             prec=self["asset"]["precision"]
         )
 
@@ -272,6 +271,7 @@ class Amount(dict):
     def __floordiv__(self, other):
         a = self.copy()
         if isinstance(other, Amount):
+            from .price import Price
             check_asset(other["asset"], self["asset"])
             return Price(self, other, steem_instance=self.steem)
         else:
